@@ -5,9 +5,13 @@ import {defineConfig, loadEnv} from 'vite';
 
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
+  // Detect GitHub Pages deployment via GitHub Actions env vars
+  const isGitHubPages = process.env.GITHUB_ACTIONS === 'true' || process.env.GITHUB_PAGES === 'true';
+  const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1] || 'valdy';
+
   return {
     // Base path for GitHub Pages - repository name
-    base: process.env.GITHUB_PAGES ? '/valdy/' : '/',
+    base: isGitHubPages ? `/${repoName}/` : '/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
