@@ -1,11 +1,13 @@
 import { AIProvider } from './types';
 import { OpenRouterProvider } from './openrouter';
+import { PollinationsStaticClient, getStaticClient, setStaticApiKey } from './pollinations-static';
 
-export type ProviderType = 'openrouter' | 'anthropic' | 'openai';
+export type ProviderType = 'openrouter' | 'anthropic' | 'openai' | 'pollinations';
 
 export function getProvider(type: ProviderType, apiKey: string): AIProvider {
   switch (type) {
     case 'openrouter':
+    case 'pollinations':
       return new OpenRouterProvider(apiKey);
     case 'anthropic':
       throw new Error('Anthropic provider not implemented yet');
@@ -33,3 +35,4 @@ export function clearApiKey(): void {
 
 export * from './types';
 export * from './openrouter';
+export { PollinationsStaticClient, getStaticClient, setStaticApiKey };
