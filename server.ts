@@ -3,22 +3,28 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import fs from 'fs';
 
-// Quick LLM Helper
+// Quick LLM Helper - Pollinations.ai BYOP (Bring Your Own Pollen)
+// Docs: https://gen.pollinations.ai/docs
+// Base URL: https://gen.pollinations.ai/v1 (OpenAI-compatible)
+// API Keys: https://enter.pollinations.ai
 async function callPollinations(messages, temperature = 0.7, jsonMode = false, apiKey = '') {
   try {
-    const requestBody = {
+    const requestBody: Record<string, unknown> = {
       model: 'openai',
       messages,
       temperature,
-      jsonMode
     };
+
+    if (jsonMode) {
+      requestBody.response_format = { type: 'json_object' };
+    }
 
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (apiKey) {
       headers['Authorization'] = `Bearer ${apiKey}`;
     }
 
-    const response = await fetch('https://gen.pollinations.ai/openai/chat/completions', {
+    const response = await fetch('https://gen.pollinations.ai/v1/chat/completions', {
       method: 'POST',
       headers,
       body: JSON.stringify(requestBody)
@@ -29,8 +35,8 @@ async function callPollinations(messages, temperature = 0.7, jsonMode = false, a
       return data.choices[0]?.message?.content || '';
     }
     const errorText = await response.text();
-    console.error('Pollination API Error:', response.status, errorText);
-    throw new Error('Failed to fetch from pollinations');
+    console.error('Pollinations API Error:', response.status, errorText);
+    throw new Error('Failed to fetch from Pollinations.ai');
   } catch (error) {
     console.error(error);
     return "";

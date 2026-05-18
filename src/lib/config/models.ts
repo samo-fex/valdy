@@ -6,7 +6,9 @@
  * Import from this file to ensure consistency across the codebase.
  */
 
-// App-wide fallback chain (validation, gaps, business plan, PRD, research)
+// Pollinations.ai BYOP (Bring Your Own Pollen) - Available models
+// Docs: https://gen.pollinations.ai/docs
+// Some models: openai, deepseek, mistral, qwen, claude, gemini, llama, etc.
 export const FALLBACK_CHAIN = [
   'openai',          // Primary - fast (pollinations maps this to a good generalized model)
   'deepseek',        // Fallback 1

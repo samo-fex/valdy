@@ -4,9 +4,9 @@ import { callWithFallback } from '@/src/lib/models/config';
 import { PRIMARY_MODEL, FALLBACK_CHAIN } from '@/src/lib/config/models';
 
 export class OpenRouterProvider implements AIProvider {
-  name = 'OpenRouter';
+  name = 'Pollinations';
   private apiKey: string;
-  private baseUrl = 'https://gen.pollinations.ai/openai';
+  private baseUrl = 'https://gen.pollinations.ai/v1';
   private defaultModel = PRIMARY_MODEL;
   private rateLimitInfo: RateLimitInfo | null = null;
   private lastSuccessfulRequest: Date | null = null;
