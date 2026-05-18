@@ -1,0 +1,75 @@
+{
+  "name": "valdy",
+  "version": "1.0.0",
+  "description": "Autonomous AI-powered hypothesis engine for SaaS product discovery",
+  "hackathon": "Dynamous x Kiro Hackathon",
+  "author": "Gustavo Martini Carriconde",
+  "created": "2026-01-13",
+
+  "features": {
+    "authentication": {
+      "apiKeyStorage": { "status": "built", "description": "Secure localStorage for MVP" },
+      "keyValidation": { "status": "built", "description": "Verify API key before operations" },
+      "multiProvider": { "status": "architecture", "description": "Pollinations.ai, Anthropic, OpenAI support" },
+      "byokModel": { "status": "built", "description": "Users bring their own API keys" }
+    },
+
+    "tokenEconomy": {
+      "tokenCounter": { "status": "built", "description": "Track available vs used tokens" },
+      "tokenRate": { "status": "built", "description": "Real-time consumption rate" },
+      "autoStop": { "status": "built", "description": "Engine stops when tokens = 0" },
+      "persistence": { "status": "pending", "description": "Store token state in localStorage" }
+    },
+
+    "hypothesisEngine": {
+      "aiGeneration": { "status": "built", "description": "Generate hypotheses from niche" },
+      "problemFocus": { "status": "built", "description": "Generate market problem hypotheses" },
+      "solutionFocus": { "status": "built", "description": "Generate solution hypotheses" },
+      "steeringSlider": { "status": "built", "description": "Balance problem vs solution generation" },
+      "rateControl": { "status": "built", "description": "Configurable generation frequency" }
+    },
+
+    "researchPipeline": {
+      "autoResearch": { "status": "built", "description": "Automatically validate hypotheses" },
+      "confidenceScoring": { "status": "built", "description": "0-100% confidence rating" },
+      "sourceAttribution": { "status": "built", "description": "Track research sources" },
+      "stateTransitions": { "status": "built", "description": "empty → researching → validated" }
+    },
+
+    "dnaGeneration": {
+      "unlockMechanism": { "status": "built", "description": "5+ validated = DNA ready" },
+      "dnaExport": { "status": "pending", "description": "Package insights as spec document" },
+      "dnaFormat": { "status": "pending", "description": "JSON/Markdown output" },
+      "featurePrioritization": { "status": "pending", "description": "Rank by confidence" }
+    },
+
+    "userInterface": {
+      "terminalAesthetic": { "status": "built", "description": "Retro hacker-style UI" },
+      "twoColumnLayout": { "status": "built", "description": "Problems | Solutions" },
+      "cardSystem": { "status": "built", "description": "Hypothesis cards with states" },
+      "progressIndicators": { "status": "built", "description": "Visual state feedback" },
+      "responsiveDesign": { "status": "pending", "description": "Mobile-compatible" }
+    }
+  },
+
+  "models": {
+    "primary": "deepseek/deepseek-r1-0528:free",
+    "research": "google/gemini-2.0-flash-exp:free",
+    "fallback": "meta-llama/llama-3.3-70b-instruct:free"
+  },
+
+  "techStack": {
+    "frontend": "Next.js 15 + React 19 + TypeScript",
+    "styling": "Tailwind CSS",
+    "api": "Pollinations.ai (OpenAI-compatible)",
+    "storage": "localStorage (MVP)",
+    "deployment": "Vercel"
+  },
+
+  "metrics": {
+    "timeToFirstHypothesis": "< 30 seconds",
+    "hypothesesPerSession": "8-16",
+    "validationRate": "> 60%",
+    "dnaUnlockRate": "> 50% of sessions"
+  }
+}

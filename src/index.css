@@ -1,0 +1,279 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-border: #1a1a1e;
+  --color-input: #27272a;
+  --color-ring: #00f2ff;
+  --color-background: #08080a;
+  --color-foreground: #e2e2e7;
+  --color-primary: #00f2ff;
+  --color-primary-foreground: #000000;
+  --color-secondary: #0c0c0f;
+  --color-secondary-foreground: #a1a1aa;
+  --color-destructive: rgba(255, 80, 80, 0.05);
+  --color-destructive-foreground: #ffa1a1;
+  --color-muted: #121217;
+  --color-muted-foreground: #71717a;
+  --color-accent: rgba(0, 242, 255, 0.05);
+  --color-accent-foreground: #00f2ff;
+  --color-popover: #16161c;
+  --color-popover-foreground: #e2e2e7;
+  --color-card: #16161c;
+  --color-card-foreground: #e2e2e7;
+  
+  --radius-lg: 8px;
+  --radius-md: 6px;
+  --radius-sm: 4px;
+
+  --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
+  --font-mono: 'Courier New', ui-monospace, monospace;
+}
+
+@layer base {
+  :root {
+    --bg-base: #08080a;
+    --bg-surface: #0c0c0f;
+    --bg-elevated: #16161c;
+    --text-primary-color: #e2e2e7;
+    --text-secondary-color: #71717a;
+    --text-muted-color: #a1a1aa;
+    --border-subtle: #1a1a1e;
+    --border-default: #27272a;
+    --border-strong: #00f2ff;
+    --accent-primary: #00f2ff;
+    --status-success: #4ade80;
+    --status-warning: #f59e0b;
+    --status-error: #ffa1a1;
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply text-foreground bg-background;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Custom scrollbar matching Immersive theme */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #08080a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1a1a1e;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #27272a;
+  }
+}
+
+/* Specific theme components matching Immersive UI */
+@layer components {
+  .btn-primary {
+    background: #00f2ff;
+    color: #000;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:hover {
+    opacity: 0.9;
+  }
+  .input-label {
+    font-size: 12px;
+    color: #a1a1aa;
+  }
+  .section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #71717a;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .custom-input {
+    background: #16161c;
+    border: 1px solid #27272a;
+    border-radius: 6px;
+    padding: 10px;
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .custom-input:focus {
+    border-color: #00f2ff;
+  }
+  .model-card {
+    background: #16161c;
+    border: 1px solid #27272a;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .model-card.active, .model-card:hover {
+    border-color: #00f2ff;
+    background: rgba(0, 242, 255, 0.05);
+  }
+  .code-editor, .terminal-view {
+    background: #050507 !important;
+    border: 1px solid #1a1a1e !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    font-family: 'Courier New', monospace !important;
+    color: #9cdcfe !important;
+    box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+  }
+  .db-status {
+    padding: 12px;
+    background: rgba(255, 80, 80, 0.05);
+    border: 1px dashed rgba(255, 80, 80, 0.3);
+    border-radius: 8px;
+    font-size: 11px;
+    color: #ffa1a1;
+    text-align: center;
+  }
+  .status-badge {
+    font-size: 10px;
+    text-transform: uppercase;
+    background: rgba(0, 242, 255, 0.1);
+    color: #00f2ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 242, 255, 0.2);
+  }
+}
+
+/* Override existing Legacy utilities to match Immersive Theme seamlessly */
+@layer utilities {
+  .glass, .metal-card, .metal-container, .metal-panel {
+    background: #16161c !important;
+    border: 1px solid #27272a !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+  
+  .glass:hover, .metal-card:hover {
+    border-color: #00f2ff !important;
+    background: rgba(0, 242, 255, 0.05) !important;
+  }
+
+  .metal-bg, .bg-zinc-950, .bg-slate-900, .bg-gray-900, .bg-black {
+    background: transparent !important;
+  }
+  
+  .metal-header {
+    background: #0c0c0f !important;
+    border-bottom: 1px solid #1a1a1e !important;
+    box-shadow: none !important;
+  }
+  
+  .metal-btn {
+    background: #16161c !important;
+    border: 1px solid #27272a !important;
+    color: #a1a1aa !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+  }
+  .metal-btn:hover {
+    border-color: #00f2ff !important;
+    color: #00f2ff !important;
+  }
+  
+  .metal-btn-primary {
+    background: #00f2ff !important;
+    color: #000 !important;
+    border: none !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+  }
+  .metal-btn-primary:hover {
+    opacity: 0.9 !important;
+  }
+  
+  .metal-input {
+    background: #16161c !important;
+    border: 1px solid #27272a !important;
+    color: #fff !important;
+    box-shadow: none !important;
+  }
+  .metal-input:focus {
+    border-color: #00f2ff !important;
+    box-shadow: none !important;
+  }
+  
+  .text-gradient-cyan, .text-gradient-emerald {
+    color: #00f2ff !important;
+    background: none !important;
+    -webkit-text-fill-color: #00f2ff !important;
+  }
+  
+  .text-cyan-400, .text-emerald-400, .text-emerald-500 {
+    color: #00f2ff !important;
+  }
+
+  .bg-gradient-to-r {
+    background: #00f2ff !important;
+    color: #000 !important;
+  }
+  
+  .bg-cyan-500, .bg-emerald-500 {
+    background-color: #00f2ff !important;
+    color: #000 !important;
+  }
+
+  .shadow-cyan-500\/50, .shadow-emerald-500\/50, .shadow-lg, .shadow-xl {
+    box-shadow: none !important;
+  }
+
+  .border-cyan-500\/30, .border-cyan-500, .border-emerald-500\/30, .border-emerald-400, .border-emerald-500 {
+    border-color: #00f2ff !important;
+  }
+
+  /* Override structural colors to match Immersive UI specs precisely */
+  .text-white {
+    color: #e2e2e7 !important;
+  }
+  
+  .text-gray-400, .text-gray-300 {
+    color: #a1a1aa !important;
+  }
+  
+  .text-gray-500, .text-gray-600 {
+    color: #71717a !important;
+  }
+
+  /* Structural mappings */
+  .min-h-screen {
+    background: radial-gradient(circle at top right, #121217, #08080a) !important;
+  }
+
+  /* Target likely sidebar wrappers */
+  .w-80, .w-96, aside, .sidebar-container {
+    background: #0c0c0f !important;
+    border-right: 1px solid #1a1a1e !important;
+    border-left: 1px solid #1a1a1e !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+}

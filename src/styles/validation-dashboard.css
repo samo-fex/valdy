@@ -1,0 +1,545 @@
+/* ============================================
+   VALIDATION DASHBOARD - Glassmorphism Theme
+   ============================================
+   Matches the existing orange gradient design with
+   glass-card effects and backdrop blur
+   ============================================ */
+
+/* CSS Variables */
+:root {
+  /* Orange/Amber Accent */
+  --vd-primary: #F59E0B;
+  --vd-primary-dark: #D97706;
+  --vd-primary-glow: rgba(245, 158, 11, 0.3);
+
+  /* Glass Effects */
+  --vd-glass-bg: rgba(255, 255, 255, 0.05);
+  --vd-glass-bg-hover: rgba(255, 255, 255, 0.08);
+  --vd-glass-bg-light: rgba(255, 255, 255, 0.1);
+  --vd-glass-border: rgba(255, 255, 255, 0.1);
+  --vd-glass-border-hover: rgba(255, 255, 255, 0.2);
+
+  /* Text Colors - Dark for contrast on orange background */
+  --vd-text: #000000;
+  --vd-text-secondary: #1a1a1a;
+  --vd-text-muted: #333333;
+  --vd-text-white: #ffffff;
+  --vd-text-subtle: #4a4a4a;
+
+  /* Semantic - Dark versions for contrast */
+  --vd-success: #065f46;
+  --vd-warning: #78350f;
+  --vd-danger: #7f1d1d;
+
+  /* Typography */
+  --vd-font: 'OCR-B', monospace;
+
+  /* Spacing (8px grid) */
+  --vd-space-1: 4px;
+  --vd-space-2: 8px;
+  --vd-space-3: 12px;
+  --vd-space-4: 16px;
+  --vd-space-5: 24px;
+  --vd-space-6: 32px;
+  --vd-space-8: 48px;
+
+  /* Fixed Dimensions - CONSISTENT SIZES */
+  --vd-card-width: 320px;
+  --vd-gauge-size: 120px;
+  --vd-gauge-large: 180px;
+  --vd-border-radius: 16px;
+  --vd-border-radius-sm: 8px;
+
+  /* Shadows */
+  --vd-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --vd-shadow-hover: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+  --vd-shadow-glow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+
+/* ============================================
+   LAYOUT - No background, inherits from parent
+   ============================================ */
+
+.vd-container {
+  font-family: var(--vd-font);
+  padding: var(--vd-space-6);
+}
+
+.vd-header {
+  text-align: center;
+  margin-bottom: var(--vd-space-6);
+}
+
+.vd-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #000000;
+  margin: 0 0 var(--vd-space-2) 0;
+  letter-spacing: -0.02em;
+}
+
+.vd-subtitle {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--vd-text-muted);
+  margin: 0;
+}
+
+/* ============================================
+   OVERALL SCORE CARD - Glass Effect
+   ============================================ */
+
+.vd-overall-card {
+  background: var(--vd-glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--vd-glass-border);
+  border-radius: var(--vd-border-radius);
+  box-shadow: var(--vd-shadow);
+  padding: var(--vd-space-6);
+  margin-bottom: var(--vd-space-6);
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vd-overall-card:hover {
+  background: var(--vd-glass-bg-hover);
+  border-color: var(--vd-glass-border-hover);
+}
+
+.vd-overall-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vd-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--vd-space-4);
+}
+
+.vd-overall-gauge {
+  width: var(--vd-gauge-large);
+  height: var(--vd-gauge-large);
+  margin: 0 auto var(--vd-space-5);
+}
+
+.vd-overall-mini-scores {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  padding-top: var(--vd-space-5);
+  border-top: 1px solid var(--vd-glass-border);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .vd-overall-mini-scores {
+    gap: var(--vd-space-4);
+  }
+}
+
+.vd-mini-score {
+  text-align: center;
+}
+
+.vd-mini-score-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.vd-mini-score-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--vd-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+/* ============================================
+   PILLAR GRID
+   ============================================ */
+
+.vd-pillar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+@media (max-width: 900px) {
+  .vd-pillar-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .vd-pillar-grid {
+    grid-template-columns: 1fr;
+    padding: 0 16px;
+  }
+}
+
+/* ============================================
+   PILLAR CARD - Glass Effect
+   ============================================ */
+
+.vd-pillar-card {
+  background: var(--vd-glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--vd-glass-border);
+  border-radius: var(--vd-border-radius);
+  box-shadow: var(--vd-shadow);
+  padding: var(--vd-space-5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vd-pillar-card:hover {
+  background: var(--vd-glass-bg-hover);
+  border-color: rgba(245, 158, 11, 0.3);
+  transform: translateY(-2px);
+  box-shadow: var(--vd-shadow-glow);
+}
+
+/* Card Header */
+.vd-pillar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--vd-space-4);
+}
+
+.vd-pillar-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #000000;
+  margin: 0;
+}
+
+.vd-pillar-score {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--vd-primary);
+}
+
+/* Gauge Container - FIXED SIZE FOR ALL */
+.vd-pillar-gauge {
+  width: var(--vd-gauge-size);
+  height: var(--vd-gauge-size);
+  margin: 0 auto var(--vd-space-5);
+  position: relative;
+}
+
+/* Separator */
+.vd-pillar-separator {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--vd-glass-border), transparent);
+  margin: var(--vd-space-4) 0;
+}
+
+/* ============================================
+   SUBCATEGORY ROW
+   ============================================ */
+
+.vd-subcategory-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vd-space-3);
+}
+
+.vd-subcategory-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.vd-subcategory-name {
+  font-size: 13px;
+  font-weight: 400;
+  color: #000000;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vd-subcategory-sources {
+  display: flex;
+  gap: 3px;
+  margin: 0 var(--vd-space-3);
+  flex-shrink: 0;
+}
+
+.vd-source-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vd-source-dot.active {
+  background: var(--vd-primary);
+  box-shadow: 0 0 6px var(--vd-primary-glow);
+}
+
+.vd-source-dot.pending {
+  background: rgba(255, 255, 255, 0.3);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Source Icons - API-specific branded icons */
+.vd-source-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  transition: all 0.3s ease;
+  color: rgba(255, 255, 255, 0.25);
+  padding: 0;
+}
+
+.vd-source-icon.active {
+  border-color: currentColor;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.vd-source-icon.active:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.15);
+}
+
+.vd-source-icon.pending {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.vd-source-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.vd-subcategory-score {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+  min-width: 28px;
+  text-align: right;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* ============================================
+   UNIFIED CIRCULAR GAUGE (SVG) - Glass Theme
+   ============================================ */
+
+.vd-gauge {
+  width: 100%;
+  height: 100%;
+}
+
+.vd-gauge-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.vd-gauge-fill {
+  fill: none;
+  stroke: var(--vd-primary);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s ease-out;
+  filter: drop-shadow(0 0 6px var(--vd-primary-glow));
+}
+
+.vd-gauge-score {
+  font-family: var(--vd-font);
+  font-size: 28px;
+  font-weight: 700;
+  fill: #000000;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.vd-gauge-score-large {
+  font-size: 42px;
+}
+
+.vd-gauge-label {
+  font-family: var(--vd-font);
+  font-size: 11px;
+  font-weight: 500;
+  fill: var(--vd-text-muted);
+  text-anchor: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ============================================
+   BUSINESS CONCEPT CARD - Glass Effect
+   ============================================ */
+
+.vd-concept-card {
+  background: var(--vd-glass-bg-light);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--vd-glass-border);
+  border-left: 4px solid var(--vd-primary);
+  border-radius: var(--vd-border-radius);
+  box-shadow: var(--vd-shadow);
+  padding: var(--vd-space-5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vd-concept-card:hover {
+  background: var(--vd-glass-bg-hover);
+  border-color: var(--vd-glass-border-hover);
+  border-left-color: var(--vd-primary);
+}
+
+.vd-concept-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--vd-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--vd-space-4);
+}
+
+.vd-concept-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--vd-space-4);
+}
+
+.vd-concept-item {
+  display: flex;
+  gap: var(--vd-space-3);
+}
+
+.vd-concept-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--vd-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.vd-concept-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--vd-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.vd-concept-text {
+  font-size: 13px;
+  font-weight: 400;
+  color: #000000;
+  line-height: 1.5;
+}
+
+/* ============================================
+   AGENT CONSOLE - Dark Glass Effect
+   ============================================ */
+
+.vd-console-card {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--vd-glass-border);
+  border-radius: var(--vd-border-radius);
+  box-shadow: var(--vd-shadow);
+  padding: var(--vd-space-4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vd-console-card:hover {
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.vd-console-header {
+  display: flex;
+  align-items: center;
+  gap: var(--vd-space-2);
+  margin-bottom: var(--vd-space-3);
+}
+
+.vd-console-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--vd-success);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.vd-console-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--vd-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.vd-console-content {
+  font-family: 'OCR-B', monospace;
+  font-size: 12px;
+  color: var(--vd-text-muted);
+  line-height: 1.6;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.vd-console-line {
+  opacity: 0.7;
+  padding: 2px 0;
+}
+
+.vd-console-line:last-child {
+  opacity: 1;
+  color: var(--vd-primary);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .vd-container {
+    padding: var(--vd-space-4);
+  }
+
+  .vd-pillar-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vd-concept-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vd-overall-mini-scores {
+    flex-wrap: wrap;
+    gap: var(--vd-space-4);
+  }
+}

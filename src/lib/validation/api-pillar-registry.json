@@ -1,0 +1,163 @@
+{
+  "version": "1.0",
+  "apis": {
+    "serper": {
+      "id": "serper",
+      "name": "Serper (Google)",
+      "shortName": "Google",
+      "icon": "search",
+      "color": "#4285F4",
+      "endpoint": "searchSerper",
+      "requiresKey": true,
+      "envVar": "SERPER_API_KEY"
+    },
+    "reddit": {
+      "id": "reddit",
+      "name": "Reddit",
+      "shortName": "Reddit",
+      "icon": "message-circle",
+      "color": "#FF4500",
+      "endpoint": "searchPullPush",
+      "requiresKey": false,
+      "envVar": null
+    },
+    "hackernews": {
+      "id": "hackernews",
+      "name": "Hacker News",
+      "shortName": "HN",
+      "icon": "terminal",
+      "color": "#FF6600",
+      "endpoint": "searchHackerNews",
+      "requiresKey": false,
+      "envVar": null
+    },
+    "fred": {
+      "id": "fred",
+      "name": "FRED Economic Data",
+      "shortName": "FRED",
+      "icon": "trending-up",
+      "color": "#1E88E5",
+      "endpoint": "searchFRED",
+      "requiresKey": true,
+      "envVar": "FRED_API_KEY"
+    },
+    "openalex": {
+      "id": "openalex",
+      "name": "OpenAlex Academic",
+      "shortName": "Academic",
+      "icon": "book-open",
+      "color": "#7C3AED",
+      "endpoint": "searchOpenAlex",
+      "requiresKey": false,
+      "envVar": null
+    },
+    "wikipedia": {
+      "id": "wikipedia",
+      "name": "Wikipedia",
+      "shortName": "Wiki",
+      "icon": "globe",
+      "color": "#636363",
+      "endpoint": "searchWikipedia",
+      "requiresKey": false,
+      "envVar": null
+    },
+    "wikidata": {
+      "id": "wikidata",
+      "name": "Wikidata",
+      "shortName": "Wikidata",
+      "icon": "database",
+      "color": "#339966",
+      "endpoint": "searchWikidata",
+      "requiresKey": false,
+      "envVar": null
+    },
+    "remoteok": {
+      "id": "remoteok",
+      "name": "RemoteOK Jobs",
+      "shortName": "Jobs",
+      "icon": "briefcase",
+      "color": "#00D4AA",
+      "endpoint": "searchRemoteOK",
+      "requiresKey": false,
+      "envVar": null
+    }
+  },
+  "pillars": {
+    "problem": {
+      "id": "problem",
+      "name": "Problem Severity",
+      "apis": ["serper", "reddit", "hackernews"],
+      "prompts": {
+        "serper": "{keyword} customer complaints problems pain points frustrated users struggling",
+        "reddit": "{keyword} help needed struggling frustrated advice recommendation",
+        "hackernews": "{keyword} problem pain point ask hn feedback"
+      }
+    },
+    "market": {
+      "id": "market",
+      "name": "Market Opportunity",
+      "apis": ["serper", "fred", "openalex", "wikipedia"],
+      "prompts": {
+        "serper": "{keyword} market size TAM SAM SOM growth rate 2024 2025 billion revenue",
+        "fred": "{industry} industry revenue sales growth",
+        "openalex": "{keyword} market analysis industry research study",
+        "wikipedia": "{keyword} industry market sector"
+      }
+    },
+    "competition": {
+      "id": "competition",
+      "name": "Competitive Landscape",
+      "apis": ["serper", "reddit", "hackernews", "wikipedia"],
+      "prompts": {
+        "serper": "{keyword} competitors alternatives vs comparison best top",
+        "reddit": "{keyword} alternative to best which one recommendation",
+        "hackernews": "{keyword} alternative compare vs show hn competitor",
+        "wikipedia": "{keyword} software company service"
+      }
+    },
+    "solution": {
+      "id": "solution",
+      "name": "Solution Fit",
+      "apis": ["serper", "hackernews", "openalex", "reddit"],
+      "prompts": {
+        "serper": "{keyword} how to build implementation tutorial guide architecture",
+        "hackernews": "{keyword} built launched show hn tech stack architecture",
+        "openalex": "{keyword} system design implementation methodology research",
+        "reddit": "{keyword} how to build tech stack advice experience"
+      }
+    },
+    "monetization": {
+      "id": "monetization",
+      "name": "Monetization Potential",
+      "apis": ["serper", "reddit", "hackernews", "fred"],
+      "prompts": {
+        "serper": "{keyword} pricing price cost subscription freemium enterprise",
+        "reddit": "{keyword} pricing worth paying budget cheap expensive",
+        "hackernews": "{keyword} pricing model revenue monetization strategy",
+        "fred": "software subscription services revenue spending"
+      }
+    },
+    "gtm": {
+      "id": "gtm",
+      "name": "Go-to-Market Clarity",
+      "apis": ["serper", "reddit", "hackernews", "remoteok"],
+      "prompts": {
+        "serper": "{keyword} marketing strategy customer acquisition growth hack",
+        "reddit": "{keyword} how did you find users marketing launch",
+        "hackernews": "{keyword} launch strategy growth marketing ask hn first users",
+        "remoteok": "{keyword}"
+      }
+    },
+    "timing": {
+      "id": "timing",
+      "name": "Timing and Trends",
+      "apis": ["serper", "hackernews", "fred", "openalex"],
+      "prompts": {
+        "serper": "{keyword} trend 2024 2025 2026 future growth emerging",
+        "hackernews": "{keyword} trend future prediction 2024 2025 emerging",
+        "fred": "{industry} technology adoption digital transformation",
+        "openalex": "{keyword} trend analysis future forecast emerging research"
+      }
+    }
+  }
+}
