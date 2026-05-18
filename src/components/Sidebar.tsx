@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Lightbulb, Brain, FileText, ClipboardList, Code2, Lock } from 'lucide-react';
+import { Lightbulb, Brain, FileText, ClipboardList, Lock, Key, LogOut, User, Coins } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { SectionKey } from '@/src/lib/colors';
 
 interface SidebarProps {
@@ -24,7 +25,98 @@ const ACTIVE_COLORS: Record<SectionKey, string> = {
   PRD: '#0e7490',          // cyan-700
 };
 
+// Your app's publishable key (pk_) - shows app name on consent screen
+// Get yours at https://enter.pollinations.ai
+const CLIENT_ID = 'pk_valdy';
+
 export default function Sidebar({ activeSection, onSectionChange, unlockedSections = ['INPUT', 'PROCESSING'], newlyUnlocked = [] }: SidebarProps) {
+  const [isConnected, setIsConnected] = useState(false);
+  const [userInfo, setUserInfo] = useState<{ name?: string; username?: string; balance?: number } | null>(null);
+
+  // Check for API key in URL fragment after redirect
+  useEffect(() => {
+    const hash = new URLSearchParams(window.location.hash.slice(1));
+    const apiKey = hash.get('api_key');
+    const error = hash.get('error');
+
+    if (apiKey) {
+      // Store the key
+      localStorage.setItem('curatos_mode', apiKey);
+      setIsConnected(true);
+      
+      // Clear the hash
+      window.location.hash = '';
+      
+      // Fetch user info
+      fetchUserInfo(apiKey);
+    } else if (error) {
+      console.error('Authorization error:', error);
+      window.location.hash = '';
+    }
+  }, []);
+
+  // Check if already connected on mount
+  useEffect(() => {
+    const storedKey = localStorage.getItem('curatos_mode');
+    if (storedKey && storedKey.startsWith('sk_')) {
+      setIsConnected(true);
+      fetchUserInfo(storedKey);
+    }
+  }, []);
+
+  const fetchUserInfo = async (apiKey: string) => {
+    try {
+      const response = await fetch('https://enter.pollinations.ai/api/device/userinfo', {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUserInfo({
+          name: data.name,
+          username: data.preferred_username,
+        });
+      }
+
+      // Also fetch balance
+      const balanceRes = await fetch('https://gen.pollinations.ai/account/balance', {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
+      });
+      
+      if (balanceRes.ok) {
+        const balanceData = await balanceRes.json();
+        setUserInfo(prev => ({
+          ...prev,
+          balance: balanceData.balance,
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch user info:', error);
+    }
+  };
+
+  const handleConnect = () => {
+    // Build authorization URL for Pollinations.ai BYOP
+    const params = new URLSearchParams({
+      redirect_uri: window.location.origin + window.location.pathname,
+      client_id: CLIENT_ID,
+      scope: 'generate',
+    });
+
+    // Redirect to Pollinations authorization
+    window.location.href = `https://enter.pollinations.ai/authorize?${params}`;
+  };
+
+  const handleDisconnect = () => {
+    localStorage.removeItem('curatos_mode');
+    setIsConnected(false);
+    setUserInfo(null);
+  };
+
   return (
     <aside 
       className="fixed left-0 top-0 h-screen w-56 flex flex-col py-8 z-50"
@@ -85,26 +177,47 @@ export default function Sidebar({ activeSection, onSectionChange, unlockedSectio
         })}
       </nav>
 
-      <div className="mt-auto px-6 pb-6">
-        <button
-          onClick={() => {
-            const currentKey = localStorage.getItem('curatos_mode') || '';
-            const key = window.prompt('Enter your Pollinations BYOP Key:', currentKey);
-            if (key !== null) {
-              if (key.trim()) {
-                localStorage.setItem('curatos_mode', key.trim());
-                window.location.reload();
-              } else {
-                localStorage.removeItem('curatos_mode');
-                window.location.reload();
-              }
-            }
-          }}
-          className="text-xs px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg w-full transition-colors flex items-center justify-center gap-2 border border-gray-700"
-        >
-          <Lock size={12} />
-          Connect BYOP
-        </button>
+      {/* Connection Status / Button */}
+      <div className="mt-auto px-3 pb-6 space-y-3">
+        {isConnected ? (
+          <div className="space-y-2">
+            {userInfo && (
+              <div className="px-3 py-2 bg-white/5 rounded-lg space-y-1">
+                {userInfo.username && (
+                  <div className="flex items-center gap-2 text-xs text-white/70">
+                    <User size={12} />
+                    <span>{userInfo.username}</span>
+                  </div>
+                )}
+                {userInfo.balance !== undefined && (
+                  <div className="flex items-center gap-2 text-xs">
+                    <Coins size={12} className="text-green-400" />
+                    <span className="text-green-400">{userInfo.balance} pollen</span>
+                  </div>
+                )}
+              </div>
+            )}
+            <motion.button
+              onClick={handleDisconnect}
+              className="w-full text-xs px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors flex items-center justify-center gap-2 border border-gray-700"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <LogOut size={12} />
+              Disconnect
+            </motion.button>
+          </div>
+        ) : (
+          <motion.button
+            onClick={handleConnect}
+            className="w-full text-xs px-3 py-2 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-medium shadow-lg shadow-orange-500/25"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Key size={12} />
+            Connect
+          </motion.button>
+        )}
       </div>
 
       <style>{`

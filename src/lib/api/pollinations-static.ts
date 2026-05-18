@@ -173,11 +173,16 @@ export class PollinationsStaticClient {
 // Singleton instance for static deployment
 let staticClient: PollinationsStaticClient | null = null;
 
+// Public key for Pollinations.ai (pk_ prefix - safe for client-side)
+// Replace with your actual public key, or set VITE_POLLINATIONS_API_KEY in .env
+const DEFAULT_PUBLIC_KEY = ''; // <-- Put your pk_ key here
+
 export function getStaticClient(): PollinationsStaticClient {
   if (!staticClient) {
-    // Try to get API key from localStorage or environment
+    // Try to get API key from localStorage, environment, or default
     const apiKey = localStorage.getItem('pollinations_api_key') || 
-                   import.meta.env.VITE_POLLINATIONS_API_KEY || '';
+                   import.meta.env.VITE_POLLINATIONS_API_KEY || 
+                   DEFAULT_PUBLIC_KEY;
     staticClient = new PollinationsStaticClient(apiKey);
   }
   return staticClient;
