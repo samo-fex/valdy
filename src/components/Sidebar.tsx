@@ -27,7 +27,7 @@ const ACTIVE_COLORS: Record<SectionKey, string> = {
 
 // Your app's publishable key (pk_) - shows app name on consent screen
 // Get yours at https://enter.pollinations.ai
-const CLIENT_ID = 'pk_valdy';
+const CLIENT_ID = 'pk_n34dzFlBjzCYs9yc';
 
 export default function Sidebar({ activeSection, onSectionChange, unlockedSections = ['INPUT', 'PROCESSING'], newlyUnlocked = [] }: SidebarProps) {
   const [isConnected, setIsConnected] = useState(false);

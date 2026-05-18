@@ -8,11 +8,12 @@
 
 // Pollinations.ai BYOP (Bring Your Own Pollen) - Available models
 // Docs: https://gen.pollinations.ai/docs
-// Some models: openai, deepseek, mistral, qwen, claude, gemini, llama, etc.
+
+// App-wide fallback chain for general tasks
 export const FALLBACK_CHAIN = [
-  'openai',          // Primary - fast (pollinations maps this to a good generalized model)
-  'deepseek',        // Fallback 1
-  'mistral'          // Fallback 2
+  'openai',          // Primary - fast general model
+  'deepseek',        // Fallback 1 - good reasoning
+  'mistral'          // Fallback 2 - fast instruction following
 ] as const;
 
 // AutoCoder-specific fallback chain (designer, decomposer, implementer)
@@ -22,6 +23,22 @@ export const AUTOCODER_FALLBACK_CHAIN = [
   'qwen'
 ] as const;
 
-// Convenience exports (derived from position)
+// Search models for web-search tasks (use these for research/validation)
+// These models have built-in web search capabilities
+export const SEARCH_MODELS = {
+  // Gemini with Google Search grounding - fast, good for factual queries
+  gemini: 'gemini-search',
+  // Perplexity Sonar - fast with web search
+  perplexity: 'perplexity-fast',
+} as const;
+
+// Search fallback chain - use for research, validation, market analysis
+export const SEARCH_FALLBACK_CHAIN = [
+  SEARCH_MODELS.gemini,
+  SEARCH_MODELS.perplexity,
+] as const;
+
+// Convenience exports
 export const PRIMARY_MODEL = FALLBACK_CHAIN[0];
 export const DEFAULT_MODEL = PRIMARY_MODEL;
+export const PRIMARY_SEARCH_MODEL = SEARCH_MODELS.gemini;
