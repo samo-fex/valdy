@@ -2,7 +2,6 @@ import { motion } from 'framer-motion';
 import { FlaskConical, CheckCircle, Pencil, RotateCcw, Play } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import GlassCard from '@/src/components/GlassCard';
-import QualityIndicator from '@/src/components/QualityIndicator';
 
 interface InputDashboardProps {
   niche: string;
@@ -52,18 +51,6 @@ export default function InputDashboard({
   const [editText, setEditText] = useState('');
   const [revealedPillars, setRevealedPillars] = useState<string[]>([]);
   const [typewriterTexts, setTypewriterTexts] = useState<Record<string, string>>({});
-
-  const GDP_SCORES: Record<string, number> = {
-    'Global': 100,        // Full bars - sum of all
-    'North America': 28,  // ~28% of world GDP
-    'Europe': 22,         // ~22% of world GDP
-    'Asia Pacific': 35,   // ~35% of world GDP
-    'Latin America': 6,   // ~6% of world GDP
-    'Middle East': 4,     // ~4% of world GDP
-    'Africa': 3,          // ~3% of world GDP
-  };
-
-  const geographyQuality = geography ? (GDP_SCORES[geography] || 50) : 0;
 
   // localStorage loading disabled - component always starts fresh
 
@@ -184,13 +171,7 @@ export default function InputDashboard({
 
               {/* Target Geography Dropdown */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="input-label">Target Geography</label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-white/40">GDP</span>
-                    <QualityIndicator value={geographyQuality} />
-                  </div>
-                </div>
+                <label className="input-label">Target Geography</label>
                 <select
                   value={geography}
                   onChange={(e) => onGeographyChange(e.target.value)}

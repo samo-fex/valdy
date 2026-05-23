@@ -12,14 +12,14 @@
 // App-wide fallback chain for general tasks
 export const FALLBACK_CHAIN = [
   'openai',          // Primary - fast general model
-  'deepseek',        // Fallback 1 - good reasoning
+  'gemini-search',        // Fallback 1 - good reasoning
   'mistral'          // Fallback 2 - fast instruction following
 ] as const;
 
 // AutoCoder-specific fallback chain (designer, decomposer, implementer)
 export const AUTOCODER_FALLBACK_CHAIN = [
   'openai',
-  'deepseek',
+  'gemini-search',
   'qwen'
 ] as const;
 

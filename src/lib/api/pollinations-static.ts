@@ -175,7 +175,7 @@ let staticClient: PollinationsStaticClient | null = null;
 
 // Public key for Pollinations.ai (pk_ prefix - safe for client-side)
 // Replace with your actual public key, or set VITE_POLLINATIONS_API_KEY in .env
-const DEFAULT_PUBLIC_KEY = ''; // <-- Put your pk_ key here
+const DEFAULT_PUBLIC_KEY = 'pk_n34dzFlBjzCYs9yc'; // <-- Put your pk_ key here
 
 export function getStaticClient(): PollinationsStaticClient {
   if (!staticClient) {

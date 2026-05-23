@@ -403,8 +403,8 @@ export default function ValidationDashboardV2({
         </div>
       )}
 
-      {/* Evidence Matrix */}
-      <EvidenceMatrix pillars={pillars} onSourceClick={onSourceClick} />
+      {/* Evidence Matrix - hidden for now */}
+      {/* <EvidenceMatrix pillars={pillars} onSourceClick={onSourceClick} /> */}
     </div>
   );
 }
