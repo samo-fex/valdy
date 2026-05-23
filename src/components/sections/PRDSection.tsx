@@ -118,8 +118,15 @@ export default function PRDSection({ prdData, isGenerating, onGenerate, canGener
         </div>
       )}
 
+      {/* Markdown fallback when prdData is a legacy string */}
+      {prdData && typeof prdData === 'string' && (
+        <div className="rounded-2xl p-6" style={{ background: 'rgba(6, 182, 212, 0.08)', border: '1px solid rgba(6, 182, 212, 0.15)' }}>
+          <pre className="text-white/80 text-sm whitespace-pre-wrap font-mono">{prdData}</pre>
+        </div>
+      )}
+
       {/* PRD Content — sections revealed sequentially */}
-      {prdData && (
+      {prdData && typeof prdData !== 'string' && (
         <>
           <div className="rounded-2xl p-6 space-y-6" style={{ background: 'rgba(6, 182, 212, 0.08)', border: '1px solid rgba(6, 182, 212, 0.15)' }}>
             {SECTIONS.map(({ key, label }) => {
@@ -162,7 +169,7 @@ export default function PRDSection({ prdData, isGenerating, onGenerate, canGener
 
                         {key === 'target_users' && (
                           <div className="space-y-4">
-                            {prdData.target_users.map((user) => (
+                            {(prdData.target_users || []).map((user) => (
                               <div key={user.id} className="rounded-lg p-4" style={{ background: 'rgba(6, 182, 212, 0.06)', border: '1px solid rgba(6, 182, 212, 0.1)' }}>
                                 <div className="flex items-center gap-3 mb-3">
                                   <span className="px-2 py-0.5 text-xs font-mono font-bold rounded bg-cyan-500/20 text-cyan-300">{user.id}</span>
@@ -173,7 +180,7 @@ export default function PRDSection({ prdData, isGenerating, onGenerate, canGener
                                 <div className="mb-3">
                                   <span className="text-xs text-white/40 uppercase tracking-wider font-medium">Pain Points:</span>
                                   <ul className="mt-1.5 space-y-1">
-                                    {user.pain_points.map((p, i) => (
+                                    {(user.pain_points || []).map((p, i) => (
                                       <li key={i} className="text-white/60 text-sm flex items-start gap-2">
                                         <span className="text-orange-400 mt-0.5">•</span>{p}
                                       </li>
@@ -191,7 +198,7 @@ export default function PRDSection({ prdData, isGenerating, onGenerate, canGener
 
                         {key === 'user_stories' && (
                           <div className="space-y-4">
-                            {prdData.user_stories.map((story) => (
+                            {(prdData.user_stories || []).map((story) => (
                               <div key={story.id} className="rounded-lg p-4" style={{ background: 'rgba(6, 182, 212, 0.06)', border: '1px solid rgba(6, 182, 212, 0.1)' }}>
                                 <div className="flex items-center gap-2 mb-2">
                                   <span className="px-2 py-0.5 text-xs font-mono font-bold rounded bg-cyan-500/20 text-cyan-300">{story.id}</span>
@@ -202,7 +209,7 @@ export default function PRDSection({ prdData, isGenerating, onGenerate, canGener
                                 <div>
                                   <span className="text-xs text-white/40 uppercase tracking-wider font-medium">Acceptance Criteria:</span>
                                   <ul className="mt-1.5 space-y-1">
-                                    {story.acceptance_criteria.map((ac, i) => (
+                                    {(story.acceptance_criteria || []).map((ac, i) => (
                                       <li key={i} className="text-white/60 text-sm flex items-start gap-2">
                                         <span className="text-emerald-400 mt-0.5">✓</span>{ac}
                                       </li>
@@ -227,7 +234,7 @@ export default function PRDSection({ prdData, isGenerating, onGenerate, canGener
                                 </tr>
                               </thead>
                               <tbody>
-                                {prdData.functional_requirements.map((fr) => (
+                                {(prdData.functional_requirements || []).map((fr) => (
                                   <tr key={fr.id} className="border-b border-cyan-500/5">
                                     <td className="py-3 pr-4 font-mono text-cyan-300 text-xs">{fr.id}</td>
                                     <td className="py-3 pr-4">
@@ -237,7 +244,7 @@ export default function PRDSection({ prdData, isGenerating, onGenerate, canGener
                                     <td className="py-3 pr-4 text-white/60">{fr.description}</td>
                                     <td className="py-3">
                                       <div className="flex gap-1 flex-wrap">
-                                        {fr.story_ids.map((sid) => (
+                                        {(fr.story_ids || []).map((sid) => (
                                           <span key={sid} className="px-1.5 py-0.5 text-xs font-mono rounded bg-cyan-500/10 text-cyan-300/70">{sid}</span>
                                         ))}
                                       </div>
@@ -262,7 +269,7 @@ export default function PRDSection({ prdData, isGenerating, onGenerate, canGener
                                 </tr>
                               </thead>
                               <tbody>
-                                {prdData.non_functional_requirements.map((nfr) => (
+                                {(prdData.non_functional_requirements || []).map((nfr) => (
                                   <tr key={nfr.id} className="border-b border-cyan-500/5">
                                     <td className="py-3 pr-4 font-mono text-cyan-300 text-xs">{nfr.id}</td>
                                     <td className="py-3 pr-4">
@@ -277,7 +284,7 @@ export default function PRDSection({ prdData, isGenerating, onGenerate, canGener
                                     <td className="py-3 pr-4 text-emerald-300 font-mono text-xs">{nfr.target}</td>
                                     <td className="py-3">
                                       <div className="flex gap-1 flex-wrap">
-                                        {nfr.applies_to.map((ref) => (
+                                        {(nfr.applies_to || []).map((ref) => (
                                           <span key={ref} className="px-1.5 py-0.5 text-xs font-mono rounded bg-cyan-500/10 text-cyan-300/70">{ref}</span>
                                         ))}
                                       </div>

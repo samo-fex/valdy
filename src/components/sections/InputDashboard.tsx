@@ -9,7 +9,7 @@ interface InputDashboardProps {
   onNicheChange: (niche: string) => void;
   onGeographyChange: (geo: string) => void;
   onStartValidation?: (niche: string, canonicalDescription: string, geography: string) => void;
-  clearAnalysis?: boolean;
+  clearAnalysis?: number;
   onNormalizationComplete?: (analysis: any) => void;
 }
 
@@ -76,7 +76,7 @@ export default function InputDashboard({
   onNicheChange,
   onGeographyChange,
   onStartValidation,
-  clearAnalysis = false,
+  clearAnalysis = 0,
   onNormalizationComplete,
 }: InputDashboardProps) {
   const [analysis, setAnalysis] = useState<any>(null);
@@ -84,9 +84,9 @@ export default function InputDashboard({
   const [isGenerating, setIsGenerating] = useState(false);
   const [previousIdeas, setPreviousIdeas] = useState<string[]>([]);
   
-  // Clear analysis when clearAnalysis prop is true
+  // Clear analysis when clearAnalysis counter changes (skip initial mount with 0)
   useEffect(() => {
-    if (clearAnalysis) {
+    if (clearAnalysis > 0) {
       setAnalysis(null);
       setShowCanonical(false);
       setRevealedPillars([]);

@@ -34,6 +34,59 @@ const ExportModal = lazy(() => import('@/src/components/dashboard/ExportModal').
 // Section navigation order
 const SECTION_ORDER: SectionKey[] = ['INPUT', 'PROCESSING', 'BUSINESS_PLAN', 'PRD'];
 
+// Convert structured PRD object to markdown for legacy modal/export usage
+function prdDataToMarkdown(prd: any): string {
+  if (!prd) return '';
+  if (typeof prd === 'string') return prd;
+  const lines: string[] = ['# Product Requirements Document', ''];
+  if (prd.executive_summary) {
+    lines.push('## Executive Summary', '', prd.executive_summary, '');
+  }
+  if (Array.isArray(prd.target_users) && prd.target_users.length) {
+    lines.push('## Target Users & Personas', '');
+    for (const u of prd.target_users) {
+      lines.push(`### ${u.id} — ${u.persona} (${u.age_range})`);
+      lines.push('', u.description || '', '');
+      if (u.pain_points?.length) {
+        lines.push('**Pain Points:**');
+        for (const p of u.pain_points) lines.push(`- ${p}`);
+        lines.push('');
+      }
+      if (u.primary_need) lines.push(`**Primary Need:** ${u.primary_need}`, '');
+    }
+  }
+  if (Array.isArray(prd.user_stories) && prd.user_stories.length) {
+    lines.push('## User Stories', '');
+    for (const s of prd.user_stories) {
+      lines.push(`### ${s.id} (${s.persona_id})`, '', `> ${s.story}`, '');
+      if (s.acceptance_criteria?.length) {
+        lines.push('**Acceptance Criteria:**');
+        for (const c of s.acceptance_criteria) lines.push(`- ${c}`);
+        lines.push('');
+      }
+    }
+  }
+  if (Array.isArray(prd.functional_requirements) && prd.functional_requirements.length) {
+    lines.push('## Functional Requirements', '');
+    lines.push('| ID | Priority | Name | Description | Stories |');
+    lines.push('|---|---|---|---|---|');
+    for (const fr of prd.functional_requirements) {
+      lines.push(`| ${fr.id} | P${fr.priority} | ${fr.name} | ${fr.description} | ${(fr.story_ids || []).join(', ')} |`);
+    }
+    lines.push('');
+  }
+  if (Array.isArray(prd.non_functional_requirements) && prd.non_functional_requirements.length) {
+    lines.push('## Non-Functional Requirements', '');
+    lines.push('| ID | Category | Name | Target | Applies To |');
+    lines.push('|---|---|---|---|---|');
+    for (const nfr of prd.non_functional_requirements) {
+      lines.push(`| ${nfr.id} | ${nfr.category} | ${nfr.name} | ${nfr.target} | ${(nfr.applies_to || []).join(', ')} |`);
+    }
+    lines.push('');
+  }
+  return lines.join('\n');
+}
+
 export default function Dashboard() {
   const [state, setState] = useState<EngineState>({
     niche: '',
@@ -196,7 +249,7 @@ export default function Dashboard() {
   const [businessPlanData, setBusinessPlanData] = useState<any>(null);
   const [chartData, setChartData] = useState<any>(null);
   const [isGeneratingBusinessPlan, setIsGeneratingBusinessPlan] = useState(false);
-  const [clearInputAnalysis, setClearInputAnalysis] = useState(false);
+  const [clearInputAnalysis, setClearInputAnalysis] = useState(0);
   const [normalizedAnalysis, setNormalizedAnalysis] = useState<any>(null);
 
   // Scoring hook for stage progression
@@ -326,11 +379,7 @@ export default function Dashboard() {
   }, [validationSessionId, isValidating, addRationale]);
 
   // Reset clearInputAnalysis when returning to INPUT section
-  useEffect(() => {
-    if (activeSection === 'INPUT') {
-      setClearInputAnalysis(false);
-    }
-  }, [activeSection]);
+  // (clearInputAnalysis is a counter; InputDashboard reacts to changes via useEffect)
 
   // Start validation function
   const startValidation = useCallback(async (idea: string, canonicalDescription?: string, geography?: string) => {
@@ -1370,7 +1419,12 @@ Respond ONLY with valid JSON, no other text.`;
     setBusinessPlanData(null);
     setChartData(null);
     setPrdData(null);
+    setNormalizedAnalysis(null);
+    setClearInputAnalysis(prev => prev + 1);
     setState(prev => ({ ...prev, niche: '' }));
+    // Clear persisted analysis from localStorage
+    localStorage.removeItem('curatos_analysis');
+    localStorage.removeItem('curatos_niche');
     toast.success('Reset complete');
   }, []);
 
@@ -1600,7 +1654,7 @@ This DNA contains ${dna.problems.length + dna.solutions.length + dna.requirement
             onNicheChange={(niche) => setState(prev => ({ ...prev, niche }))}
             onGeographyChange={setGeography}
             onStartValidation={(niche, canonicalDescription, geography) => {
-              setClearInputAnalysis(true);
+              setClearInputAnalysis(prev => prev + 1);
               setActiveSection('PROCESSING');
               startValidation(niche, canonicalDescription, geography);
             }}
@@ -1721,7 +1775,7 @@ This DNA contains ${dna.problems.length + dna.solutions.length + dna.requirement
             problems={validatedProblems}
             solutions={validatedSolutions}
             niche={state.niche}
-            markdown={prdData}
+            markdown={prdDataToMarkdown(prdData)}
           />
         )}
       </Suspense>
@@ -1734,7 +1788,7 @@ This DNA contains ${dna.problems.length + dna.solutions.length + dna.requirement
             niche={state.niche}
             hypotheses={state.hypotheses}
             solutions={state.solutions}
-            prdContent={prdData || undefined}
+            prdContent={prdData ? prdDataToMarkdown(prdData) : undefined}
             landingPageHTML={landingPageHtml || undefined}
           />
         )}
