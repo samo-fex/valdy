@@ -22,7 +22,8 @@ export async function callWithFallback(
         model,
         messages,
         temperature: options?.temperature || 0.3,
-        jsonMode: options?.jsonMode
+        jsonMode: options?.jsonMode,
+        maxTokens: options?.maxTokens || 8000,
       };
 
       const response = await fetch('/api/chat', {
