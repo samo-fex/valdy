@@ -1,15 +1,22 @@
-import { FALLBACK_CHAIN } from '@/src/lib/config/models';
+import { FALLBACK_CHAIN, SEARCH_FALLBACK_CHAIN, REASONING_MODEL } from '@/src/lib/config/models';
+
+type TaskType = 'general' | 'search' | 'reasoning';
 
 export async function callWithFallback(
   apiKey: string,
   messages: { role: string; content: string }[],
-  options?: { temperature?: number; maxTokens?: number; jsonMode?: boolean }
+  options?: { temperature?: number; maxTokens?: number; jsonMode?: boolean; taskType?: TaskType }
 ): Promise<string> {
+  const taskType = options?.taskType || 'general';
+  const chain = taskType === 'search' ? SEARCH_FALLBACK_CHAIN
+    : taskType === 'reasoning' ? [REASONING_MODEL, ...FALLBACK_CHAIN] as const
+    : FALLBACK_CHAIN;
+
   const errors: string[] = [];
 
-  for (const model of FALLBACK_CHAIN) {
+  for (const model of chain) {
     try {
-      console.log(`[ModelClient] Trying model: ${model}`);
+      console.log(`[ModelClient] Trying model: ${model} (task: ${taskType})`);
 
       const requestBody: Record<string, unknown> = {
         model,

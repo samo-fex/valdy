@@ -170,11 +170,11 @@ OUTPUT FORMAT (JSON):
   "confidence": 1-100 (your confidence in this analysis)
 }`;
 
-    const content = await callWithFallback(
-      apiKey,
-      [{ role: 'user', content: analysisPrompt }],
-      { temperature: 0.2, maxTokens: 500 }
-    );
+  const content = await callWithFallback(
+    apiKey,
+    [{ role: 'user', content: analysisPrompt }],
+    { temperature: 0.2, maxTokens: 500, taskType: 'search' }
+  );
 
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     let analysis = { relevanceScore: 70, supports: [], concerns: [], impactOnScore: 0, confidence: 70 };

@@ -3,14 +3,15 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import fs from 'fs';
 
-// Quick LLM Helper - Pollinations.ai BYOP (Bring Your Own Pollen)
-// Docs: https://gen.pollinations.ai/docs
-// Base URL: https://gen.pollinations.ai/v1 (OpenAI-compatible)
-// API Keys: https://enter.pollinations.ai
-async function callPollinations(messages, temperature = 0.7, jsonMode = false, apiKey = '') {
+// Model routing: openai=general, perplexity-fast=search, deepseek=reasoning
+const MODEL_GENERAL = 'openai';
+const MODEL_SEARCH = 'perplexity-fast';
+const MODEL_REASONING = 'deepseek';
+
+async function callPollinations(messages, temperature = 0.7, jsonMode = false, apiKey = '', model = MODEL_GENERAL) {
   try {
     const requestBody: Record<string, unknown> = {
-      model: 'openai',
+      model,
       messages,
       temperature,
     };
@@ -56,10 +57,11 @@ async function startServer() {
     try {
       const apiKey = req.headers.authorization?.replace('Bearer ', '') || '';
       const { messages, model, models, route, jsonMode, temperature } = req.body;
-      const responseText = await callPollinations(messages, temperature || 0.7, jsonMode, apiKey);
+      const usedModel = model || MODEL_GENERAL;
+      const responseText = await callPollinations(messages, temperature || 0.7, jsonMode, apiKey, usedModel);
       res.json({
         content: responseText,
-        model: model || 'openai',
+        model: usedModel,
         tokens: { prompt: 0, completion: 0, total: 0 }
       });
     } catch(e) {
@@ -69,32 +71,53 @@ async function startServer() {
   });
 
   app.post("/api/validate/normalize", async (req, res) => {
+    const apiKey = req.headers.authorization?.replace('Bearer ', '') || '';
+    const { userInput, geography = 'Global', previousIdeas = [] } = req.body;
+    const prompt = `You are a senior business analyst. Analyze this business idea in detail for the ${geography} market: "${userInput}".
+
+For each of the 7 pillars below, provide a DETAILED paragraph (3-5 sentences, 60-100 words) with specific data, numbers, and actionable insights. Be thorough, factual, and concrete — not vague or generic.
+
+Return ENTIRELY in JSON with these exact fields:
+{
+  "problem": "Detailed paragraph: What specific pain point does this solve? Who experiences it? How severe and frequent is it? Include concrete evidence or statistics.",
+  "market": "Detailed paragraph: What is the target market size (TAM/SAM/SOM)? Growth rate? Ideal customer profile? Include specific market data for ${geography}.",
+  "competition": "Detailed paragraph: Who are the main competitors? What are their strengths and weaknesses? What is the competitive advantage and differentiation opportunity?",
+  "solution": "Detailed paragraph: How does the product/service work? Core mechanism, technology, and approach? What makes it unique vs alternatives?",
+  "monetization": "Detailed paragraph: Revenue model, pricing strategy, expected revenue per customer, unit economics. Include specific pricing benchmarks.",
+  "gtm": "Detailed paragraph: Customer acquisition strategy, marketing channels, sales model, early adopter strategy. Be specific about channels and tactics.",
+  "timing": "Detailed paragraph: Why now? What technology, market, regulatory, or cultural trends support this? Include specific recent developments."
+}
+
+RULES:
+- Return ONLY valid JSON, no markdown, no code blocks
+- Each field must be 3-5 sentences (60-100 words minimum)
+- Include specific numbers, statistics, or data points where possible
+- Be factual and analytical, not promotional
+- Tailor everything to ${geography} geography
+
+Output the JSON object only.`;
+
+    const response = await callPollinations([{role: 'user', content: prompt}], 0.5, true, apiKey, MODEL_REASONING);
     try {
-      const apiKey = req.headers.authorization?.replace('Bearer ', '') || '';
-      const { userInput, geography = 'Global', previousIdeas = [] } = req.body;
-      const prompt = `Convert this business idea into a clinical, dry description of mechanics and market: "${userInput}". Geography: ${geography}. Respond ENTIRELY in JSON with fields problem, market, competition, solution, monetization, gtm, timing. No markdown, just raw JSON object.`;
-      
-      const response = await callPollinations([{role: 'user', content: prompt}], 0.7, true, apiKey);
       let analysis = JSON.parse(response.replace(/```json/g, '').replace(/```/g, ''));
       res.json({ original: userInput, analysis });
-    } catch(e) {
-      // Fallback
-      res.json({
-        original: req.body.userInput,
-        analysis: {
-          problem: req.body.userInput || "Needs definition",
-          market: "Global market with varying segments",
-          competition: "Existing solutions lack modern UX", 
-          solution: req.body.userInput,
-          monetization: "Subscription and enterprise tiers",
-          gtm: "Direct sales and inbound marketing",
-          timing: "Growing demand makes timing optimal"
-        }
-      });
-    }
-  });
+} catch(e) {
+    res.json({
+      original: req.body.userInput,
+      analysis: {
+        problem: req.body.userInput || "Needs definition",
+        market: "Global market with varying segments and growth potential",
+        competition: "Existing solutions lack modern UX and integration capabilities",
+        solution: req.body.userInput,
+        monetization: "Subscription and enterprise tiers with usage-based add-ons",
+        gtm: "Direct sales, inbound marketing, and strategic channel partnerships",
+        timing: "Growing demand and favorable market trends make timing optimal"
+      }
+    });
+  }
+});
 
-  app.post("/api/validate", async (req, res) => {
+app.post("/api/validate", async (req, res) => {
     const apiKey = req.headers.authorization?.replace('Bearer ', '') || '';
     const { idea, canonicalDescription, geography } = req.body;
     const sessionId = Date.now().toString();
@@ -110,46 +133,111 @@ async function startServer() {
       pillars: []
     });
 
-    const validationPrompt = `Given the startup idea: "${idea}" and details: "${canonicalDescription}" targeting geography: "${geography}". 
-Generate a comprehensive validation analysis in JSON format.
-The JSON must strictly have this structure:
+    const validationPrompt = `You are a senior startup analyst. Given this startup idea: "${idea}" and context: "${canonicalDescription}" targeting geography: "${geography}", generate a comprehensive validation analysis.
+
+You MUST include ALL 7 pillars below with detailed analysis. Each pillar must have 3 subcategories, and each subcategory must have 1 source with real-world evidence.
+
+Return strictly valid JSON (no markdown) with this structure:
 {
   "overallScore": number (0-100),
-  "scoreLabel": "string (e.g. Promising, Unproven)",
+  "scoreLabel": "string (e.g. Promising, Strong, Weak)",
   "pillars": [
     {
-      "key": "string",
-      "name": "string",
-      "icon": "string",
+      "key": "problem",
+      "name": "Problem Severity",
+      "icon": "🎯",
       "score": number (0-100),
       "status": "complete",
       "subcategories": [
-        {
-          "key": "string",
-          "name": "string",
-          "score": number (0-100),
-          "status": "complete",
-          "sources": [
-            {
-              "apiName": "string",
-              "title": "string",
-              "url": "string (simulated URL)",
-              "snippet": "string",
-              "supports": ["string"],
-              "concerns": ["string"],
-              "confidence": number (0-100)
-            }
-          ]
-        }
+        { "key": "pain_intensity", "name": "Pain Intensity", "score": number, "status": "complete", "sources": [{ "apiName": "Google", "title": "string", "url": "string", "snippet": "detailed evidence (2-3 sentences)", "supports": ["point1", "point2"], "concerns": ["concern1"], "confidence": number }] },
+        { "key": "pain_frequency", "name": "Pain Frequency", "score": number, "status": "complete", "sources": [{ "apiName": "Reddit", "title": "string", "url": "string", "snippet": "detailed evidence", "supports": ["point1"], "concerns": [], "confidence": number }] },
+        { "key": "current_workarounds", "name": "Current Workarounds", "score": number, "status": "complete", "sources": [{ "apiName": "HackerNews", "title": "string", "url": "string", "snippet": "detailed evidence", "supports": ["point1"], "concerns": [], "confidence": number }] }
+      ]
+    },
+    {
+      "key": "market",
+      "name": "Market Opportunity",
+      "icon": "📊",
+      "score": number,
+      "status": "complete",
+      "subcategories": [
+        { "key": "market_size", "name": "Market Size (TAM)", "score": number, "status": "complete", "sources": [{ "apiName": "Google", "title": "string", "url": "string", "snippet": "Include specific market size figures and TAM/SAM/SOM data for ${geography}", "supports": ["point1"], "concerns": [], "confidence": number }] },
+        { "key": "growth_trajectory", "name": "Growth Trajectory", "score": number, "status": "complete", "sources": [{ "apiName": "FRED", "title": "string", "url": "string", "snippet": "Include growth rate data and CAGR figures", "supports": ["point1"], "concerns": [], "confidence": number }] },
+        { "key": "adjacent_markets", "name": "Adjacent Markets", "score": number, "status": "complete", "sources": [{ "apiName": "Google", "title": "string", "url": "string", "snippet": "detailed evidence", "supports": ["point1"], "concerns": [], "confidence": number }] }
+      ]
+    },
+    {
+      "key": "competition",
+      "name": "Competitive Landscape",
+      "icon": "⚔️",
+      "score": number,
+      "status": "complete",
+      "subcategories": [
+        { "key": "direct_competitors", "name": "Direct Competitors", "score": number, "status": "complete", "sources": [{ "apiName": "Google", "title": "string", "url": "string", "snippet": "Name specific competitors and their positioning", "supports": ["point1"], "concerns": [], "confidence": number }] },
+        { "key": "competitor_weaknesses", "name": "Competitor Weaknesses", "score": number, "status": "complete", "sources": [{ "apiName": "Reddit", "title": "string", "url": "string", "snippet": "Specific complaints and gaps in competitor products", "supports": ["point1"], "concerns": [], "confidence": number }] },
+        { "key": "differentiation_opportunity", "name": "Differentiation Opportunity", "score": number, "status": "complete", "sources": [{ "apiName": "HackerNews", "title": "string", "url": "string", "snippet": "detailed evidence", "supports": ["point1"], "concerns": [], "confidence": number }] }
+      ]
+    },
+    {
+      "key": "solution",
+      "name": "Solution Fit",
+      "icon": "🔧",
+      "score": number,
+      "status": "complete",
+      "subcategories": [
+        { "key": "problem_solution_match", "name": "Problem-Solution Match", "score": number, "status": "complete", "sources": [{ "apiName": "Google", "title": "string", "url": "string", "snippet": "detailed evidence", "supports": ["point1"], "concerns": [], "confidence": number }] },
+        { "key": "feature_completeness", "name": "Feature Completeness", "score": number, "status": "complete", "sources": [{ "apiName": "Google", "title": "string", "url": "string", "snippet": "detailed evidence", "supports": ["point1"], "concerns": [], "confidence": number }] },
+        { "key": "value_clarity", "name": "Value Clarity", "score": number, "status": "complete", "sources": [{ "apiName": "Google", "title": "string", "url": "string", "snippet": "detailed evidence", "supports": ["point1"], "concerns": [], "confidence": number }] }
+      ]
+    },
+    {
+      "key": "monetization",
+      "name": "Monetization Potential",
+      "icon": "💰",
+      "score": number,
+      "status": "complete",
+      "subcategories": [
+        { "key": "pricing_benchmarks", "name": "Pricing Benchmarks", "score": number, "status": "complete", "sources": [{ "apiName": "Google", "title": "string", "url": "string", "snippet": "Include specific pricing data and benchmarks for ${geography}", "supports": ["point1"], "concerns": [], "confidence": number }] },
+        { "key": "willingness_to_pay", "name": "Willingness to Pay", "score": number, "status": "complete", "sources": [{ "apiName": "Reddit", "title": "string", "url": "string", "snippet": "Evidence of customer payment behavior", "supports": ["point1"], "concerns": [], "confidence": number }] },
+        { "key": "revenue_model_fit", "name": "Revenue Model Fit", "score": number, "status": "complete", "sources": [{ "apiName": "Google", "title": "string", "url": "string", "snippet": "detailed evidence", "supports": ["point1"], "concerns": [], "confidence": number }] }
+      ]
+    },
+    {
+      "key": "gtm",
+      "name": "Go-to-Market Clarity",
+      "icon": "🚀",
+      "score": number,
+      "status": "complete",
+      "subcategories": [
+        { "key": "channel_viability", "name": "Channel Viability", "score": number, "status": "complete", "sources": [{ "apiName": "Google", "title": "string", "url": "string", "snippet": "detailed evidence", "supports": ["point1"], "concerns": [], "confidence": number }] },
+        { "key": "customer_access", "name": "Customer Access", "score": number, "status": "complete", "sources": [{ "apiName": "Google", "title": "string", "url": "string", "snippet": "detailed evidence", "supports": ["point1"], "concerns": [], "confidence": number }] },
+        { "key": "viral_organic_potential", "name": "Viral/Organic Potential", "score": number, "status": "complete", "sources": [{ "apiName": "HackerNews", "title": "string", "url": "string", "snippet": "detailed evidence", "supports": ["point1"], "concerns": [], "confidence": number }] }
+      ]
+    },
+    {
+      "key": "timing",
+      "name": "Timing & Trends",
+      "icon": "⏰",
+      "score": number,
+      "status": "complete",
+      "subcategories": [
+        { "key": "technology_enablers", "name": "Technology Enablers", "score": number, "status": "complete", "sources": [{ "apiName": "Google", "title": "string", "url": "string", "snippet": "Specific recent technology developments enabling this", "supports": ["point1"], "concerns": [], "confidence": number }] },
+        { "key": "market_readiness", "name": "Market Readiness", "score": number, "status": "complete", "sources": [{ "apiName": "Google", "title": "string", "url": "string", "snippet": "detailed evidence", "supports": ["point1"], "concerns": [], "confidence": number }] },
+        { "key": "macro_tailwinds", "name": "Macro Tailwinds", "score": number, "status": "complete", "sources": [{ "apiName": "FRED", "title": "string", "url": "string", "snippet": "Macro trends and data supporting timing", "supports": ["point1"], "concerns": [], "confidence": number }] }
       ]
     }
   ]
 }
-Include exactly 3 pillars: Market, Competition, and Financial. Each pillar should have 1 subcategory, and each subcategory should have 1 simulated real-world source.
-Output ONLY raw valid JSON, no markdown code blocks formatting.`;
+
+CRITICAL RULES:
+- Include ALL 7 pillars exactly as shown above
+- Each snippet must be 2-3 sentences with specific data, not generic text
+- Scores should be realistic (30-90 range, not all 70+)
+- Use realistic-looking URLs (e.g., https://example.com/relevant-topic)
+- Output ONLY raw valid JSON, no markdown code blocks`;
 
     try {
-      const resp = await callPollinations([{role: 'user', content: validationPrompt}], 0.7, true, apiKey);
+      const resp = await callPollinations([{role: 'user', content: validationPrompt}], 0.5, true, apiKey, MODEL_SEARCH);
       const jsonStr = resp.replace(/```json/g, '').replace(/```/g, '').trim();
       const data = JSON.parse(jsonStr);
 
@@ -168,32 +256,13 @@ Output ONLY raw valid JSON, no markdown code blocks formatting.`;
         overallScore: 60,
         scoreLabel: 'Needs Verification',
         pillars: [
-          {
-            key: "market",
-            name: "Market Viability",
-            icon: "🏢",
-            score: 60,
-            status: "complete",
-            subcategories: [
-              {
-                key: "demand",
-                name: "Market Demand",
-                score: 60,
-                status: "complete",
-                sources: [
-                  {
-                    apiName: "Fallback Search",
-                    title: "Estimated Market Size",
-                    url: "https://example.com/market",
-                    snippet: "The market demand for this service is still being verified. Preliminary analysis suggests viable pockets of opportunity.",
-                    supports: ["Potential demand"],
-                    concerns: ["Needs more research"],
-                    confidence: 50
-                  }
-                ]
-              }
-            ]
-          }
+          { key: "problem", name: "Problem Severity", icon: "🎯", score: 60, status: "complete", subcategories: [{ key: "pain_intensity", name: "Pain Intensity", score: 60, status: "complete", sources: [{ apiName: "Google", title: "Market Pain Analysis", url: "https://example.com/market-pain", snippet: "The market demand for this service shows moderate pain intensity with growing adoption indicators.", supports: ["Potential demand"], concerns: ["Needs more research"], confidence: 50 }] }] },
+          { key: "market", name: "Market Opportunity", icon: "📊", score: 65, status: "complete", subcategories: [{ key: "market_size", name: "Market Size (TAM)", score: 65, status: "complete", sources: [{ apiName: "Google", title: "Market Size Estimate", url: "https://example.com/market-size", snippet: "Preliminary analysis suggests viable pockets of opportunity with expanding addressable market.", supports: ["Growing market"], concerns: ["Size needs validation"], confidence: 55 }] }] },
+          { key: "competition", name: "Competitive Landscape", icon: "⚔️", score: 55, status: "complete", subcategories: [{ key: "direct_competitors", name: "Direct Competitors", score: 55, status: "complete", sources: [{ apiName: "Google", title: "Competitor Analysis", url: "https://example.com/competitors", snippet: "Several incumbents operate with legacy technology, creating differentiation opportunity.", supports: ["Weak competitors"], concerns: ["Market is crowded"], confidence: 50 }] }] },
+          { key: "solution", name: "Solution Fit", icon: "🔧", score: 60, status: "complete", subcategories: [{ key: "problem_solution_match", name: "Problem-Solution Match", score: 60, status: "complete", sources: [{ apiName: "Google", title: "Solution Validation", url: "https://example.com/solution", snippet: "The proposed solution addresses core pain points with a modern approach.", supports: ["Good fit"], concerns: ["Needs validation"], confidence: 50 }] }] },
+          { key: "monetization", name: "Monetization Potential", icon: "💰", score: 55, status: "complete", subcategories: [{ key: "pricing_benchmarks", name: "Pricing Benchmarks", score: 55, status: "complete", sources: [{ apiName: "Google", title: "Pricing Analysis", url: "https://example.com/pricing", snippet: "Industry pricing benchmarks suggest subscription model viability.", supports: ["Recurring revenue possible"], concerns: ["Price sensitivity"], confidence: 50 }] }] },
+          { key: "gtm", name: "Go-to-Market Clarity", icon: "🚀", score: 50, status: "complete", subcategories: [{ key: "channel_viability", name: "Channel Viability", score: 50, status: "complete", sources: [{ apiName: "Google", title: "GTM Analysis", url: "https://example.com/gtm", snippet: "Digital channels available but competitive. Direct sales and partnerships show promise.", supports: ["Multiple channels"], concerns: ["CAC may be high"], confidence: 45 }] }] },
+          { key: "timing", name: "Timing & Trends", icon: "⏰", score: 65, status: "complete", subcategories: [{ key: "technology_enablers", name: "Technology Enablers", score: 65, status: "complete", sources: [{ apiName: "Google", title: "Tech Trends", url: "https://example.com/tech-trends", snippet: "Recent technology advances and AI capabilities make this solution more feasible than ever.", supports: ["Tech ready"], concerns: ["May be early"], confidence: 55 }] }] }
         ]
       });
     }
@@ -211,18 +280,35 @@ Output ONLY raw valid JSON, no markdown code blocks formatting.`;
   app.post("/api/validate/close-gaps", async (req, res) => {
     const apiKey = req.headers.authorization?.replace('Bearer ', '') || '';
     const { idea, canonicalDescription, pillars, geography } = req.body;
-    const prompt = `Perform a gap analysis on this startup idea: "${idea}". 
-Return a JSON object with: 
-- "gaps": an array of objects ({ "title": string, "description": string, "severity": number (1-3), "action": string })
-- "improvedIdea": AN OBJECT (NOT a string) containing exactly these 7 string fields: "problem", "market", "competition", "solution", "monetization", "gtm", "timing". Each field must have a short refined description of that aspect of the idea.
+    const prompt = `You are a senior business strategist performing a gap analysis and refining a business idea.
 
-Make sure the output is strictly valid JSON. Do not return improvedIdea as a string.`;
-    
+STARTUP IDEA: "${idea}"
+GEOGRAPHY: ${geography || 'Global'}
+CURRENT PILLAR SCORES: ${JSON.stringify(pillars?.map(p => ({ key: p.key, name: p.name, score: p.score })))}
+
+Return a JSON object with:
+1. "gaps": array of objects ({ "title": string, "description": string (2-3 sentences with specific details), "severity": number (1-3), "action": string (specific actionable recommendation) })
+2. "improvedIdea": AN OBJECT (NOT a string) with exactly these 7 fields, each containing a DETAILED paragraph (3-5 sentences, 60-100 words minimum) with specific data, numbers, and actionable insights:
+   - "problem": Refined problem statement with specific pain points and severity data
+   - "market": Refined market analysis with TAM/SAM/SOM figures and growth rates for ${geography}
+   - "competition": Refined competitive analysis naming specific competitors and differentiation
+   - "solution": Refined solution description with specific features and technology approach
+   - "monetization": Refined monetization strategy with specific pricing, revenue models, and unit economics
+   - "gtm": Refined go-to-market plan with specific channels, tactics, and customer segments
+   - "timing": Refined timing analysis with specific recent trends, regulations, and technology enablers
+
+RULES:
+- improvedIdea must be an OBJECT with 7 string fields, NOT a string
+- Each field must be 3-5 detailed sentences (60-100 words minimum)
+- Include specific numbers, statistics, competitor names, pricing data
+- Be factual and analytical, not generic or promotional
+- Output strictly valid JSON, no markdown`;
+
     try {
       const resp = await callPollinations([
-        {role: 'system', content: 'You are a meticulous JSON generator. You must output valid JSON.'},
+        {role: 'system', content: 'You are a meticulous JSON generator. You output valid JSON with detailed, specific business analysis. Every field must contain substantive content with real data and insights.'},
         {role: 'user', content: prompt + `\n\nCacheBuster: ${Date.now()}`}
-      ], 0.7, true, apiKey);
+      ], 0.5, true, apiKey, MODEL_REASONING);
       console.log("close-gaps resp:", resp);
       const jsonStr = resp.replace(/```json/g, '').replace(/```/g, '');
       const parsed = JSON.parse(jsonStr);
@@ -276,11 +362,27 @@ Make sure the output is strictly valid JSON. Do not return improvedIdea as a str
   app.post("/api/validate/generate-business-plan", async (req, res) => {
     const apiKey = req.headers.authorization?.replace('Bearer ', '') || '';
     const { improvedIdea } = req.body;
-    const prompt = `Generate a business plan for: ${JSON.stringify(improvedIdea)}.
-Return exactly a JSON object with keys:
-"executive_summary", "market_and_sales", "team_and_operations", "financial_plan", and "chart_data" (an object with arrays: market_breakdown [{name, value}], revenue_projections [{year, revenue, costs}], and financial_table [{metric, value}]). No markdown, only JSON.`;
+    const prompt = `You are a senior business consultant and financial analyst. Generate a comprehensive, detailed business plan for the following refined business idea:
+
+${JSON.stringify(improvedIdea, null, 2)}
+
+Return a JSON object with these keys:
+- "executive_summary": A detailed 3-5 paragraph executive summary covering vision, market opportunity, competitive advantage, and financial outlook
+- "market_and_sales": A detailed 3-5 paragraph market analysis with specific TAM/SAM/SOM figures, target customer segments, sales strategy, pricing, and channel plan
+- "team_and_operations": A detailed 2-3 paragraph operations plan covering key hires, org structure, tech stack, and operational milestones
+- "financial_plan": A detailed 3-5 paragraph financial plan with revenue projections, cost structure, funding needs, break-even analysis, and key financial metrics
+- "chart_data": An object with:
+  - "market_breakdown": array of 4-5 objects [{name: segment_name, value: percentage, color: hex_color}]
+  - "revenue_projections": array of 5 objects [{year: "Year N", revenue: number, costs: number}]
+  - "financial_table": array of 6-8 objects [{metric: name, value: formatted_string}]
+
+RULES:
+- Each text field must be multiple detailed paragraphs with specific data and numbers
+- Include realistic financial projections and market data
+- No markdown, only valid JSON`;
+
     try {
-      const resp = await callPollinations([{role: 'user', content: prompt}], 0.7, true, apiKey);
+      const resp = await callPollinations([{role: 'user', content: prompt}], 0.5, true, apiKey, MODEL_REASONING);
       const jsonStr = resp.replace(/```json/g, '').replace(/```/g, '');
       res.json({ businessPlan: JSON.parse(jsonStr) });
     } catch(e) {
@@ -303,9 +405,33 @@ Return exactly a JSON object with keys:
   app.post("/api/validate/generate-prd", async (req, res) => {
     const apiKey = req.headers.authorization?.replace('Bearer ', '') || '';
     const { improvedIdea } = req.body;
-    const prompt = `Write a comprehensive Product Requirements Document (PRD) in Markdown format for the following business: ${improvedIdea}. Include sections for Overview, Target Audience, Features, User Flows, and Technical Requirements. Do not wrap in JSON.`;
+    const prompt = `You are a senior product manager. Write a comprehensive, detailed Product Requirements Document (PRD) for the following business:
+
+${JSON.stringify(improvedIdea, null, 2)}
+
+The PRD must include these sections with substantial detail:
+
+# Product Requirements Document: [Product Name]
+
+## Executive Summary
+Write 3-4 detailed paragraphs covering the product vision, target market, key value proposition, and strategic goals.
+
+## Target Users & Personas
+Define 3-4 detailed user personas with: id, persona name, age_range, detailed description (2-3 sentences), pain_points (3-5 specific points), and primary_need.
+
+## User Stories
+Write 6-8 detailed user stories with: id, persona_id reference, detailed story following "As a [persona], I want to [action] so that [benefit]" format, and 2-3 acceptance_criteria per story.
+
+## Functional Requirements
+List 8-10 specific functional requirements with: id (FR-001 format), name, detailed description, story_ids referencing user stories, and priority (1-3).
+
+## Non-Functional Requirements
+List 4-6 requirements with: id (NFR-001 format), name, category (Performance/Security/Accessibility/Scalability), detailed description with specific target metrics, and applies_to referencing FR ids.
+
+Do NOT wrap in JSON. Output the PRD in markdown format only.`;
+
     try {
-      const resp = await callPollinations([{role: 'user', content: prompt}], 0.7, false, apiKey);
+      const resp = await callPollinations([{role: 'user', content: prompt}], 0.5, false, apiKey, MODEL_REASONING);
       res.json({ prd: resp });
     } catch(e) {
       res.json({ prd: "# PRD\n\n## Overview\nThis is a mock PRD." });

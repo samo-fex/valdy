@@ -60,7 +60,7 @@ export async function buildSmartQueries(
     const response = await callWithFallback(
       apiKey,
       [{ role: 'user', content: prompt }],
-      { temperature: 0.3, maxTokens: 2000, jsonMode: true }
+      { temperature: 0.3, maxTokens: 2000, jsonMode: true, taskType: 'search' }
     );
     const parsed = JSON.parse(response);
     cachedQueries = { idea, queries: parsed };
@@ -88,7 +88,7 @@ export async function buildQuery(
       const response = await callWithFallback(
         apiKey,
         [{ role: 'user', content: prompt }],
-        { temperature: 0.3, maxTokens: 50 }
+        { temperature: 0.3, maxTokens: 50, taskType: 'search' }
       );
 
       return response.trim().replace(/^["']|["']$/g, '');

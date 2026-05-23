@@ -292,14 +292,18 @@ export default function ValidationDashboardV2({
             </motion.button>
           )}
         </div>
-        <div className="vd-overall-mini-scores">
-          {pillars.slice(0, 7).map((pillar) => (
-            <div key={pillar.key} className="vd-mini-score">
-              <div className="vd-mini-score-value">{pillar.score || 0}</div>
-              <div className="vd-mini-score-label">{pillar.name.split(' ')[0]}</div>
-            </div>
-          ))}
-        </div>
+      <div className="vd-overall-mini-scores">
+        {pillars
+          .filter(p => ['market', 'competition', 'monetization'].includes(p.key))
+          .concat(pillars.filter(p => !['market', 'competition', 'monetization'].includes(p.key)))
+          .slice(0, 7)
+          .map((pillar) => (
+          <div key={pillar.key} className="vd-mini-score">
+            <div className="vd-mini-score-value">{pillar.score || 0}</div>
+            <div className="vd-mini-score-label">{pillar.name.split(' ')[0]}</div>
+          </div>
+        ))}
+      </div>
         <style>{`
           @keyframes gapGlow {
             0%, 100% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.3); }
