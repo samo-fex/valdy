@@ -6,11 +6,14 @@
  */
 
 const POLLINATIONS_BASE = 'https://gen.pollinations.ai/v1';
+const PUBLIC_GATEWAY = 'https://api.llm7.io/v1';
 const PRIMARY_MODEL = 'openai';
+const PUBLIC_MODEL = 'gemini-2.5-flash-lite';
 const SEARCH_MODEL = 'perplexity-fast';
 // Use openai as primary reasoning since deepseek is unreliable on Pollinations
 // callPollinations handles fallback chain automatically
 const REASONING_MODEL = 'openai';
+const PUBLIC_KEY = 'pk_n34dzFlBjzCYs9yc';
 
 /**
  * Check if we're running in static mode (no backend server)
@@ -29,18 +32,33 @@ function isStaticMode(): boolean {
  */
 function getApiKey(): string {
   if (typeof window === 'undefined') return '';
-  return localStorage.getItem('curatos_mode') ||
+  const key = localStorage.getItem('curatos_mode') ||
          (import.meta as any).env?.VITE_POLLINATIONS_API_KEY || '';
+  
+  // If no secret key, use public rate-limited key
+  if (!key || !key.startsWith('sk_')) {
+    return PUBLIC_KEY;
+  }
+  return key;
 }
 
 /**
- * Call Pollinations.ai chat completions with model fallback chain
+ * Call Pollinations.ai or Public Gateway chat completions with model fallback chain
  */
 async function callPollinations(
   messages: Array<{ role: string; content: string }>,
   options: { model?: string; temperature?: number; jsonMode?: boolean; maxTokens?: number } = {}
 ): Promise<string> {
-  const { model = PRIMARY_MODEL, temperature = 0.7, jsonMode = false, maxTokens = 8000 } = options;
+  const apiKey = getApiKey();
+  const isGuest = apiKey === PUBLIC_KEY;
+
+  const { model = isGuest ? PUBLIC_MODEL : PRIMARY_MODEL, temperature = 0.7, jsonMode = false, maxTokens = 8000 } = options;
+  
+  // For guests, we only use the public model, no fallback chain to private models
+  if (isGuest) {
+    return await callPollinationsOnce(messages, { model: PUBLIC_MODEL, temperature, jsonMode, maxTokens });
+  }
+
   // Build fallback chain: [requested, openai, mistral] (dedup)
   const chain = Array.from(new Set([model, PRIMARY_MODEL, 'mistral']));
   let lastError: any = null;
@@ -67,8 +85,11 @@ async function callPollinationsOnce(
   messages: Array<{ role: string; content: string }>,
   options: { model?: string; temperature?: number; jsonMode?: boolean; maxTokens?: number } = {}
 ): Promise<string> {
-  const { model = PRIMARY_MODEL, temperature = 0.7, jsonMode = false, maxTokens = 8000 } = options;
   const apiKey = getApiKey();
+  const isGuest = apiKey === PUBLIC_KEY;
+  const { model = isGuest ? PUBLIC_MODEL : PRIMARY_MODEL, temperature = 0.7, jsonMode = false, maxTokens = 8000 } = options;
+  
+  const baseUrl = isGuest ? PUBLIC_GATEWAY : POLLINATIONS_BASE;
 
   const body: Record<string, unknown> = {
     model,
@@ -83,13 +104,10 @@ async function callPollinationsOnce(
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Authorization': `Bearer ${apiKey}`,
   };
 
-  if (apiKey) {
-    headers['Authorization'] = `Bearer ${apiKey}`;
-  }
-
-  const response = await fetch(`${POLLINATIONS_BASE}/chat/completions`, {
+  const response = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
