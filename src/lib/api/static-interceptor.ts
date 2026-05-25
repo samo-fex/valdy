@@ -56,7 +56,10 @@ async function callPollinations(
   
   // For guests, we only use the public model, no fallback chain to private models
   if (isGuest) {
-    return await callPollinationsOnce(messages, { model: PUBLIC_MODEL, temperature, jsonMode, maxTokens });
+    // Inject language preference for guest users if set
+    const lang = (typeof window !== 'undefined' && localStorage.getItem('valdy_language')) || 'English';
+    const prefixed = [{ role: 'system', content: `Respond entirely in ${lang}.` }, ...messages];
+    return await callPollinationsOnce(prefixed, { model: PUBLIC_MODEL, temperature, jsonMode, maxTokens });
   }
 
   // Build fallback chain: [requested, openai, mistral] (dedup)

@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
-import { Lightbulb, Brain, FileText, ClipboardList, Lock, Key, LogOut, User, Coins } from 'lucide-react';
+import { Lightbulb, Brain, FileText, ClipboardList, Key, LogOut, User, Coins, Settings } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { SectionKey } from '@/src/lib/colors';
+import SettingsModal from '@/src/components/dashboard/SettingsModal';
 
 interface SidebarProps {
   activeSection: SectionKey;
@@ -11,7 +12,7 @@ interface SidebarProps {
 }
 
 const SECTIONS = [
-  { key: 'INPUT' as SectionKey, icon: Lightbulb, label: 'Business Idea' },
+  { key: 'INPUT' as SectionKey, icon: Lightbulb, label: 'Validate Idea' },
   { key: 'PROCESSING' as SectionKey, icon: Brain, label: 'Idea Refinement' },
   { key: 'BUSINESS_PLAN' as SectionKey, icon: FileText, label: 'Business Plan' },
   { key: 'PRD' as SectionKey, icon: ClipboardList, label: 'PRD' },
@@ -166,7 +167,7 @@ export default function Sidebar({ activeSection, onSectionChange, unlockedSectio
               >
                 {label}
               </span>
-              {!isUnlocked && <Lock size={14} className="text-gray-500 ml-auto" />}
+              {/* Removed lock icon when section is locked */}
               {isNewlyUnlocked && (
                 <span className="ml-auto px-2 py-0.5 text-xs font-bold rounded-full bg-orange-500 text-white">
                   NEW
@@ -206,6 +207,15 @@ export default function Sidebar({ activeSection, onSectionChange, unlockedSectio
               <LogOut size={12} />
               Disconnect
             </motion.button>
+            <motion.button
+              onClick={() => window.location.href = '/settings'}
+              className="w-full text-xs px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors flex items-center justify-center gap-2 border border-gray-700 mt-2"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Settings size={12} />
+              Settings
+            </motion.button>
           </div>
         ) : (
           <motion.button
@@ -218,8 +228,26 @@ export default function Sidebar({ activeSection, onSectionChange, unlockedSectio
             Connect
           </motion.button>
         )}
+        {/* Settings modal trigger for guests */}
+        {!isConnected && (
+          <motion.button
+            onClick={() => {
+              // Open modal by toggling URL fragment to avoid lifting state
+              const modal = document.getElementById('valdy-settings-modal');
+              if (modal) modal.classList.remove('hidden');
+            }}
+            className="w-full text-xs px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors flex items-center justify-center gap-2 border border-gray-700 mt-2"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Settings size={12} />
+            Settings
+          </motion.button>
+        )}
       </div>
 
+      {/* Settings Modal component (hidden by default) */}
+      <SettingsModal />
       <style>{`
         @keyframes unlockGlow {
           0%, 100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
