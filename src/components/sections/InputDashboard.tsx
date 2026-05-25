@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
-import { FlaskConical, CheckCircle, Pencil, RotateCcw, Play } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { FlaskConical, CheckCircle, Pencil, RotateCcw, Play, Search, ChevronDown, Check } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import GlassCard from '@/src/components/GlassCard';
+import { AnimatePresence } from 'framer-motion';
 
 interface InputDashboardProps {
   niche: string;
@@ -18,6 +19,7 @@ const GEOGRAPHY_OPTIONS = [
   'North America',
   'Europe',
   'Asia Pacific',
+  'MENA',
   'Latin America',
   'Middle East',
   'Africa',
@@ -100,6 +102,23 @@ export default function InputDashboard({
   const [typewriterTexts, setTypewriterTexts] = useState<Record<string, string>>({});
   const [geoMode, setGeoMode] = useState<'region' | 'country'>(
     geography && !GEOGRAPHY_OPTIONS.includes(geography) ? 'country' : 'region'
+  );
+  const [countrySearch, setCountrySearch] = useState('');
+  const [isCountryListOpen, setIsCountryListOpen] = useState(false);
+  const countryListRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (countryListRef.current && !countryListRef.current.contains(event.target as Node)) {
+        setIsCountryListOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredCountries = COUNTRY_OPTIONS.filter(c =>
+    c.toLowerCase().includes(countrySearch.toLowerCase())
   );
 
   // localStorage loading disabled - component always starts fresh
@@ -258,20 +277,86 @@ export default function InputDashboard({
                     </button>
                   </div>
                 </div>
-                <select
-                  value={geography}
-                  onChange={(e) => onGeographyChange(e.target.value)}
-                  className="custom-input w-full cursor-pointer"
-                >
-                  <option value="">
-                    {geoMode === 'country' ? 'Select target country...' : 'Select target geography...'}
-                  </option>
-                  {(geoMode === 'country' ? COUNTRY_OPTIONS : GEOGRAPHY_OPTIONS).map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative" ref={countryListRef}>
+                  {geoMode === 'region' ? (
+                    <select
+                      value={geography}
+                      onChange={(e) => onGeographyChange(e.target.value)}
+                      className="custom-input w-full cursor-pointer appearance-none"
+                    >
+                      <option value="">Select target geography...</option>
+                      {GEOGRAPHY_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="relative">
+                      <div
+                        onClick={() => setIsCountryListOpen(!isCountryListOpen)}
+                        className="custom-input w-full cursor-pointer flex items-center justify-between min-h-[42px]"
+                      >
+                        <span className={geography ? 'text-white' : 'text-zinc-500'}>
+                          {geography || 'Select target country...'}
+                        </span>
+                        <ChevronDown size={16} className={`text-zinc-500 transition-transform ${isCountryListOpen ? 'rotate-180' : ''}`} />
+                      </div>
+
+                      <AnimatePresence>
+                        {isCountryListOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="absolute top-full left-0 right-0 mt-2 bg-zinc-900 border border-white/10 rounded-lg shadow-2xl z-50 overflow-hidden"
+                          >
+                            <div className="p-2 border-b border-white/5 bg-black/20 flex items-center gap-2">
+                              <Search size={14} className="text-zinc-500" />
+                              <input
+                                type="text"
+                                value={countrySearch}
+                                onChange={(e) => setCountrySearch(e.target.value)}
+                                placeholder="Search countries..."
+                                className="bg-transparent border-none outline-none text-sm text-white w-full py-1"
+                                autoFocus
+                              />
+                            </div>
+                            <div className="max-h-[250px] overflow-y-auto custom-scrollbar">
+                              {filteredCountries.length > 0 ? (
+                                filteredCountries.map((country) => (
+                                  <div
+                                    key={country}
+                                    onClick={() => {
+                                      onGeographyChange(country);
+                                      setIsCountryListOpen(false);
+                                      setCountrySearch('');
+                                    }}
+                                    className="px-4 py-2.5 hover:bg-white/5 cursor-pointer flex items-center justify-between group transition-colors"
+                                  >
+                                    <span className={`text-sm ${geography === country ? 'text-orange-400 font-medium' : 'text-zinc-300 group-hover:text-white'}`}>
+                                      {country}
+                                    </span>
+                                    {geography === country && <Check size={14} className="text-orange-400" />}
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="px-4 py-8 text-center text-zinc-500 text-sm">
+                                  No countries found
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                  {geoMode === 'region' && (
+                    <div className="absolute right-3 top-[13px] pointer-events-none text-zinc-500">
+                      <ChevronDown size={16} />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Validate Idea Button */}
