@@ -208,7 +208,10 @@ export default function Sidebar({ activeSection, onSectionChange, unlockedSectio
               Disconnect
             </motion.button>
             <motion.button
-              onClick={() => window.location.href = '/settings'}
+              onClick={() => {
+                const modal = document.getElementById('valdy-settings-modal');
+                if (modal) modal.classList.remove('hidden');
+              }}
               className="w-full text-xs px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors flex items-center justify-center gap-2 border border-gray-700 mt-2"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}

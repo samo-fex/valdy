@@ -54,12 +54,32 @@ async function callPollinations(
 
   const { model = isGuest ? PUBLIC_MODEL : PRIMARY_MODEL, temperature = 0.7, jsonMode = false, maxTokens = 8000 } = options;
   
+  // Apply language preference (if set) for all users. Default is English (no-op).
+  const lang = (typeof window !== 'undefined' && localStorage.getItem('valdy_language')) || 'English';
+  let processedMessages = messages;
+
+  if (lang && lang !== 'English') {
+    // Stronger instruction: keep JSON keys in English but translate text values
+    const langInstruction = `IMPORTANT: Respond entirely in ${lang}. All text values in the JSON output must be in ${lang}. Keep JSON keys exactly as requested in English.`;
+    // Prepend as a system message so models that respect roles will obey
+    processedMessages = [{ role: 'system', content: langInstruction }, ...messages];
+
+    // Also append a short instruction to the last user message to help smaller models
+    const lastIdx = processedMessages.length - 1;
+    if (processedMessages[lastIdx] && processedMessages[lastIdx].role === 'user') {
+      processedMessages[lastIdx] = {
+        ...processedMessages[lastIdx],
+        content: processedMessages[lastIdx].content + `\n\nRespond entirely in ${lang}.`
+      };
+    } else {
+      // If there's no trailing user message, add a user instruction
+      processedMessages.push({ role: 'user', content: `Respond entirely in ${lang}.` });
+    }
+  }
+
   // For guests, we only use the public model, no fallback chain to private models
   if (isGuest) {
-    // Inject language preference for guest users if set
-    const lang = (typeof window !== 'undefined' && localStorage.getItem('valdy_language')) || 'English';
-    const prefixed = [{ role: 'system', content: `Respond entirely in ${lang}.` }, ...messages];
-    return await callPollinationsOnce(prefixed, { model: PUBLIC_MODEL, temperature, jsonMode, maxTokens });
+    return await callPollinationsOnce(processedMessages, { model: PUBLIC_MODEL, temperature, jsonMode, maxTokens });
   }
 
   // Build fallback chain: [requested, openai, mistral] (dedup)
@@ -68,7 +88,7 @@ async function callPollinations(
 
   for (const tryModel of chain) {
     try {
-      const result = await callPollinationsOnce(messages, { model: tryModel, temperature, jsonMode, maxTokens });
+      const result = await callPollinationsOnce(processedMessages, { model: tryModel, temperature, jsonMode, maxTokens });
       if (result && result.trim().length > 0) {
         if (tryModel !== model) {
           console.warn(`[StaticAPI] Fell back from ${model} to ${tryModel}`);
