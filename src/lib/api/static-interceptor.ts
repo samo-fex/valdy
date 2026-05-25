@@ -98,28 +98,48 @@ async function callPollinationsOnce(
     max_tokens: maxTokens,
   };
 
-  if (jsonMode) {
+  // Some public gateways (like llm7) don't accept OpenAI-style response_format.
+  // Only include OpenAI-style json response_format when calling Pollinations (non-guest).
+  if (jsonMode && !isGuest) {
     body.response_format = { type: 'json_object' };
   }
 
+  // Build headers; do not send Authorization header for guest requests to public gateway
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${apiKey}`,
   };
-
-  const response = await fetch(`${baseUrl}/chat/completions`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Pollinations API error ${response.status}: ${errorText}`);
+  if (!isGuest && apiKey) {
+    headers['Authorization'] = `Bearer ${apiKey}`;
   }
 
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || '';
+  // Debug logging to help troubleshoot failed requests (safely hide key)
+  try {
+    console.debug('[StaticAPI] Request ->', {
+      url: `${baseUrl}/chat/completions`,
+      model,
+      isGuest,
+      headers: Object.keys(headers),
+      jsonMode: Boolean(jsonMode && !isGuest),
+    });
+
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.warn(`[StaticAPI] API ${baseUrl} responded ${response.status}:`, errorText.slice(0, 500));
+      throw new Error(`API error ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || '';
+  } catch (err: any) {
+    console.error('[StaticAPI] Network or parse error calling LLM:', err?.message || err);
+    throw err;
+  }
 }
 
 /**
